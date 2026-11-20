@@ -38,7 +38,7 @@ export const BUNDLED_VECTORS: BundledVectorLayer[] = [
   },
   {
     key: 'tracking', name: 'Tracking', sourceFile: '',
-    style: { strokeColor: '#00b4d8', strokeWidth: 3.5, strokeOpacity: 0.95, strokeDash: 'solid' },
+    style: { strokeColor: '#00b4d8', strokeWidth: 3.5, strokeOpacity: 0.95, strokeDash: 'solid', searchBandFt: 60 },
     features: [], stands: [],
   },
   {

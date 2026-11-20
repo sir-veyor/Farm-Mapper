@@ -36,6 +36,16 @@ const MIGRATIONS: { key: string; forLayer: string; run: () => Promise<void> }[] 
     },
   },
   {
+    // the Tracking layer gained the shaded "area searched" band (60 ft wide by default; change it in Track)
+    key: 'm:tracking-band', forLayer: 'tracking',
+    run: async () => {
+      const layer = await editableLayer(bundled('tracking').name);
+      if (layer && layer.defaultStyle.searchBandFt === undefined) {
+        await db.layers.put({ ...layer, defaultStyle: { ...layer.defaultStyle, searchBandFt: 60 }, updatedAt: nowIso() });
+      }
+    },
+  },
+  {
     // numbered stand names ("Single stand 3") lose their number; names you edited are left alone.
     key: 'm:stand-names', forLayer: 'tree-stands',
     run: async () => {

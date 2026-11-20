@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { db } from '../db/db';
+import { setDefaultStyle } from '../db/layersRepo';
 import { startNavigation } from '../nav/navigation';
 import { getMap } from '../map/mapHandle';
 import { act, useUi } from '../state/uiStore';
@@ -7,6 +8,7 @@ import { SIGNS } from '../track/signs';
 import { dropSign, pauseTrack, resumeCurrent, resumeTrack, startNewTrack, startOfTrack, stopTrack, useTrack } from '../track/trackService';
 import { formatDuration } from '../track/trackMath';
 import { formatDistance, geometryBounds, fitSafe } from '../util/geo';
+import { resolveStyle } from '../util/style';
 import type { VectorFeature } from '../types';
 import { Sheet } from './Sheet';
 import { btn, btnDanger, btnOn, label } from './styles';
@@ -26,6 +28,8 @@ export function TrackPanel() {
     return feats.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, ['features', 'layers'], []) ?? [];
 
+  const trackingLayer = useLive(async () => (await db.layers.toArray()).find((l) => l.kind === 'vector' && l.name === 'Tracking'), ['layers'], []);
+  const bandFt = trackingLayer ? resolveStyle(trackingLayer).searchBandFt : 0;
   const elapsed = t.durationBeforeS + (t.sessionStartedAt ? (Date.now() - t.sessionStartedAt) / 1000 : 0);
   const active = t.status !== 'idle';
 
@@ -68,6 +72,14 @@ export function TrackPanel() {
           </div>
         </div>
       )}
+
+      <span style={label}>Shade the area I have searched (band width on the ground)</span>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} data-testid="band-options">
+        {[0, 30, 60, 100].map((ft) => (
+          <button key={ft} style={bandFt === ft ? btnOn : btn} aria-pressed={bandFt === ft} data-testid={`band-${ft}`} disabled={!trackingLayer}
+            onClick={() => trackingLayer && void act(setDefaultStyle(trackingLayer.id, { searchBandFt: ft }))}>{ft === 0 ? 'Off' : `${ft} ft`}</button>
+        ))}
+      </div>
 
       <span style={label}>Mark sign at my position (drops on the Tracking layer)</span>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>

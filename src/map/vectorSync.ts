@@ -3,7 +3,8 @@ import { db } from '../db/db';
 import { listLayers } from '../db/layersRepo';
 import type { Poi, VectorFeature } from '../types';
 import { isOverlayAnchor, vectorLayerIds, vectorSourceKey } from './layerIds';
-import { vectorLayerSpecs } from './styleExpressions';
+import { resolveStyle } from '../util/style';
+import { bandSpec, bandWidthExpression, vectorLayerSpecs } from './styleExpressions';
 import { layerToGeoJSON } from './toGeoJSON';
 
 export interface VectorSyncState { labels: boolean; known: Map<string, { sig: string; labels: boolean }> }
@@ -39,13 +40,17 @@ export async function reconcileVector(map: MlMap, st: VectorSyncState): Promise<
 
     if (!prev) {
       map.addSource(key, { type: 'geojson', data: fc });
-      for (const spec of vectorLayerSpecs(l.id, key, l.opacity, l.visible, st.labels)) map.addLayer(spec);
+      for (const spec of vectorLayerSpecs(l.id, key, l.opacity, l.visible, st.labels, resolveStyle(l).searchBandFt)) map.addLayer(spec);
       st.known.set(l.id, { sig, labels: st.labels });
     } else {
       if (prev.sig !== sig) { (map.getSource(key) as unknown as { setData(d: unknown): void }).setData(fc); prev.sig = sig; }
       const ids = vectorLayerIds(l.id);
       const vis = l.visible ? 'visible' : 'none';
       for (const id of Object.values(ids)) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
+      const bandFt = resolveStyle(l).searchBandFt;                       // add, resize or remove the search band
+      if (bandFt > 0 && !map.getLayer(ids.band)) map.addLayer(bandSpec(ids, key, bandFt, l.opacity, vis));
+      else if (bandFt > 0) { map.setPaintProperty(ids.band, 'line-width', bandWidthExpression(bandFt)); map.setPaintProperty(ids.band, 'line-opacity', 0.28 * l.opacity); }
+      else if (map.getLayer(ids.band)) map.removeLayer(ids.band);
       map.setPaintProperty(ids.fill, 'fill-opacity', ['*', ['get', '_fillO'], l.opacity]);
       for (const lid of [ids.line, ids.dash, ids.dot]) map.setPaintProperty(lid, 'line-opacity', ['*', ['get', '_strokeO'], l.opacity]);
       map.setPaintProperty(ids.point, 'icon-opacity', l.opacity);
@@ -57,6 +62,6 @@ export async function reconcileVector(map: MlMap, st: VectorSyncState): Promise<
   const anchor = map.getStyle().layers.find((x) => isOverlayAnchor(x.id))?.id;
   for (const l of vectors) {
     const ids = vectorLayerIds(l.id);
-    for (const id of [ids.fill, ids.line, ids.dash, ids.dot, ids.point, ids.label]) if (map.getLayer(id)) map.moveLayer(id, anchor);
+    for (const id of [ids.band, ids.fill, ids.line, ids.dash, ids.dot, ids.point, ids.label]) if (map.getLayer(id)) map.moveLayer(id, anchor);
   }
 }

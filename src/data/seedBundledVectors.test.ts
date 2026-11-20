@@ -39,6 +39,7 @@ describe('seedBundledVectors', () => {
     expect(await seedBundledVectors()).toEqual(['Boundary', 'Trails', 'Tracking', 'Tree Stands']);
     const [b, t, s] = [await byName('Boundary'), await byName('Trails'), await byName('Tree Stands')];
     expect((await byName('Tracking')).defaultStyle.strokeColor).toBe('#00b4d8');
+    expect((await byName('Tracking')).defaultStyle.searchBandFt).toBe(60);
     expect(await db.features.where('layerId').equals((await byName('Tracking')).id).count()).toBe(0);
     expect(await db.features.where('layerId').equals(b.id).count()).toBe(1);
     expect(await db.features.where('layerId').equals(t.id).count()).toBe(BUNDLED_VECTORS[1].features.length);
@@ -127,5 +128,13 @@ describe('migration of devices seeded by the earlier version', () => {
     await Promise.all(db.tables.map((t) => t.clear())); await ensureSeed();
     await seedBundledVectors();
     expect((await getSettings()).seededVectors).toEqual(expect.arrayContaining(['m:trails-centerline', 'm:stand-names']));
+  });
+  it('adds the search band to a Tracking layer made before the band existed', async () => {
+    const made = await createVectorLayer('Tracking', { strokeColor: '#00b4d8' });
+    const { searchBandFt: _omit, ...old } = made.defaultStyle; void _omit;
+    await db.layers.put({ ...made, defaultStyle: old as typeof made.defaultStyle });
+    await patchSettings({ seededVectors: ['boundary', 'trails', 'tracking', 'tree-stands'] });
+    await seedBundledVectors();
+    expect((await db.layers.get(made.id))!.defaultStyle.searchBandFt).toBe(60);
   });
 });

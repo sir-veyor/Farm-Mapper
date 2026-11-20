@@ -10,6 +10,7 @@ export interface Style {
   strokeWidth: number;   // CSS px, 0.5-12
   strokeOpacity: number; // 0-1
   strokeDash: 'solid' | 'dashed' | 'dotted';
+  searchBandFt: number;  // layer default only: width in feet of a translucent band drawn along recorded tracks (0 = off)
   fillColor: HexColor;
   fillOpacity: number;   // 0-1
   symbol: SymbolId;

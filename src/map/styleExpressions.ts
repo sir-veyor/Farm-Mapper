@@ -9,6 +9,27 @@ const isLine = ['==', GEOM, 'LineString'];
 const lineOrArea = ['any', isLine, isPolygon];
 const dashIs = (d: string) => ['==', ['coalesce', ['get', '_dash'], 'solid'], d];
 
+const FT_TO_M = 0.3048;
+// MapLibre uses 512 px tiles: metres per pixel = 78271.517 * cos(lat) / 2^zoom. The parcel is small, so one latitude serves.
+const BAND_LAT = 42.4;
+const M_PER_PX_Z0 = 78271.517 * Math.cos((BAND_LAT * Math.PI) / 180);
+
+/** On-screen width in pixels of a ground distance, at a zoom level (used for the search band and tested directly). */
+export const bandPixelWidth = (widthFt: number, zoom: number): number => (widthFt * FT_TO_M * 2 ** zoom) / M_PER_PX_Z0;
+
+/** A line width that stays a constant number of feet on the ground as you zoom. */
+export const bandWidthExpression = (widthFt: number) =>
+  ['interpolate', ['exponential', 2], ['zoom'], 0, bandPixelWidth(widthFt, 0), 24, bandPixelWidth(widthFt, 24)] as never;
+
+/** Translucent strip along recorded tracks: the ground you have already covered. */
+export function bandSpec(ids: ReturnType<typeof vectorLayerIds>, source: string, widthFt: number, opacity: number, vis: 'visible' | 'none'): LayerSpecification {
+  return {
+    id: ids.band, type: 'line', source, filter: ['==', ['get', '_track'], 1] as never,
+    layout: { visibility: vis, 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': ['get', '_stroke'], 'line-width': bandWidthExpression(widthFt), 'line-opacity': 0.28 * opacity },
+  } as unknown as LayerSpecification;
+}
+
 /** line-dasharray cannot vary per feature, so there is one map layer per dash style, each filtered on `_dash`. */
 function lineSpecs(ids: ReturnType<typeof vectorLayerIds>, source: string, opacity: number, vis: 'visible' | 'none'): LayerSpecification[] {
   const paint = { 'line-color': ['get', '_stroke'], 'line-width': ['get', '_strokeW'], 'line-opacity': ['*', ['get', '_strokeO'], opacity] };
@@ -21,10 +42,11 @@ function lineSpecs(ids: ReturnType<typeof vectorLayerIds>, source: string, opaci
 }
 
 /** Paint/layout for one vector layer's four map layers. Colours/widths come from per-feature `_` props. */
-export function vectorLayerSpecs(layerId: string, sourceKey: string, opacity: number, visible: boolean, labels: boolean): LayerSpecification[] {
+export function vectorLayerSpecs(layerId: string, sourceKey: string, opacity: number, visible: boolean, labels: boolean, bandFt = 0): LayerSpecification[] {
   const ids = vectorLayerIds(layerId);
   const vis = visible ? 'visible' : 'none';
   const specs: LayerSpecification[] = [
+    ...(bandFt > 0 ? [bandSpec(ids, sourceKey, bandFt, opacity, vis)] : []),
     {
       id: ids.fill, type: 'fill', source: sourceKey, filter: isPolygon as never, layout: { visibility: vis },
       paint: { 'fill-color': ['get', '_fill'], 'fill-opacity': ['*', ['get', '_fillO'], opacity] },

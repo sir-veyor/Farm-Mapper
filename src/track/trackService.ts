@@ -40,7 +40,7 @@ export async function ensureTrackingLayer(): Promise<Layer> {
   const ok = all.find((l) => !l.locked && !l.frozen);
   if (ok) return ok;
   if (all.length) throw new Error('The Tracking layer is locked or frozen. Unlock or thaw it in Layers first.');
-  return createVectorLayer(TRACKING_LAYER, { strokeColor: '#00b4d8', strokeWidth: 3.5, strokeOpacity: 0.95, strokeDash: 'solid' });
+  return createVectorLayer(TRACKING_LAYER, { strokeColor: '#00b4d8', strokeWidth: 3.5, strokeOpacity: 0.95, strokeDash: 'solid', searchBandFt: 60 });
 }
 
 async function acquireWake(): Promise<() => void> {

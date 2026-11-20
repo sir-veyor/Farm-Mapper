@@ -1,3 +1,6 @@
+> **Note:** this is the original build plan. The app has since grown (navigate, measure, step tracking with a search band, bundled
+> boundary/trails/stands) and some details differ. `README.md` describes what is actually built.
+
 # Parcel Field Mapper: Phase 1 Architecture & Build Plan
 
 > Paste this whole document into the Phase 2 prompt. The implementer builds **one Step (§7) at a time** and stops for verification after each one.

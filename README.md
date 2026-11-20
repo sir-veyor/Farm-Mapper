@@ -16,10 +16,18 @@ and export selected layers as KMZ, KML or GeoJSON. Maps and pins stay on the dev
   north, so `MAGNETIC_DECLINATION_DEG` (src/config.ts, -11.0 at the parcel) is applied. iPhones ask for motion permission.
 - **Measure**: tap two or more points; taps near a pin snap to it. Shows feet and bearing for each leg and in total.
 - **Track**: records your path (a point every ~10 ft, poor fixes and GPS jumps filtered) onto the **Tracking** layer, saved
-  continuously. Pause/resume, stop, or resume any saved track later (a new segment, never a line across the gap). The screen
+  continuously. A translucent **search band** (Off / 30 / 60 / 100 ft wide, default 60) shades the ground you have covered, at true ground width at every zoom.
+  Pause/resume, stop, or resume any saved track later (a new segment, never a line across the gap). The screen
   is kept awake while recording because phones stop GPS when it turns off. One-tap sign markers (Hit, Blood, Tracks, Hair,
   Bed, Lost sign, Found) drop at your position on the same layer.
 - Distances are always feet.
+
+## Keeping it going
+
+- Deploys: every push to `main` runs the tests and publishes to GitHub Pages (`.github/workflows/deploy.yml`).
+- Phones update themselves on their next online visit; the service worker caches the app so it runs with no signal.
+- Map data: replace the files in `public/data/` and bump `BUNDLE_VERSION` (imagery/DEM), or edit `src/data/` (boundary, trails, stands).
+- Your pins, tracks and settings live only in the phone's browser storage. Use **More > Backup** regularly and keep the file elsewhere.
 
 ## Layer states
 
