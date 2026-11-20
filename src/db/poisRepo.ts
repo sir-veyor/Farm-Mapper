@@ -18,7 +18,9 @@ export interface NewPoi {
   extra?: Record<string, string>;
 }
 
-const defaultName = () => `POI ${nowIso().slice(0, 16).replace('T', ' ')}`;
+const pad = (n: number) => String(n).padStart(2, '0');
+/** Short local-time default, e.g. "POI 11-20 14:03". */
+const defaultName = () => { const d = new Date(); return `POI ${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 
 export async function getPoi(id: string): Promise<Poi> {
   const p = await db.pois.get(id);
@@ -60,32 +62,44 @@ export async function addPois(layerId: string, inputs: Omit<NewPoi, 'layerId'>[]
 
 export type PoiPatch = Partial<Pick<Poi, 'name' | 'notes' | 'style' | 'extra'>>;
 
+/** Read-modify-write inside one transaction so concurrent edits (autosave + style picker) never lose updates. */
+const rw = <T,>(fn: () => Promise<T>): Promise<T> => db.transaction('rw', db.pois, db.layers, fn);
+
 export async function updatePoi(id: string, patch: PoiPatch): Promise<Poi> {
-  const p = await getPoi(id);
-  await assertItemsEditable(p.layerId);
-  const next = { ...p, ...patch, updatedAt: nowIso() };
-  await db.pois.put(next);
+  const next = await rw(async () => {
+    const p = await getPoi(id);
+    await assertItemsEditable(p.layerId);
+    const n = { ...p, ...patch, updatedAt: nowIso() };
+    await db.pois.put(n);
+    return n;
+  });
   await afterWrite();
   return next;
 }
 
 export async function movePoi(id: string, lon: number, lat: number): Promise<Poi> {
-  const p = await getPoi(id);
-  await assertItemsEditable(p.layerId);
-  const next: Poi = { ...p, lon, lat, updatedAt: nowIso(), gps: p.gps ? { ...p.gps, movedManually: true } : p.gps };
-  await db.pois.put(next);
+  const next = await rw(async () => {
+    const p = await getPoi(id);
+    await assertItemsEditable(p.layerId);
+    const n: Poi = { ...p, lon, lat, updatedAt: nowIso(), gps: p.gps ? { ...p.gps, movedManually: true } : p.gps };
+    await db.pois.put(n);
+    return n;
+  });
   await afterWrite();
   return next;
 }
 
 /** Both source and destination layers must be editable. */
 export async function movePoiToLayer(id: string, layerId: string): Promise<Poi> {
-  const p = await getPoi(id);
-  await assertItemsEditable(p.layerId);
-  const dest = await assertItemsEditable(layerId);
-  if (dest.kind !== 'vector') throw new Error('Destination must be a vector layer.');
-  const next = { ...p, layerId, updatedAt: nowIso() };
-  await db.pois.put(next);
+  const next = await rw(async () => {
+    const p = await getPoi(id);
+    await assertItemsEditable(p.layerId);
+    const dest = await assertItemsEditable(layerId);
+    if (dest.kind !== 'vector') throw new Error('Destination must be a vector layer.');
+    const n = { ...p, layerId, updatedAt: nowIso() };
+    await db.pois.put(n);
+    return n;
+  });
   await afterWrite();
   return next;
 }
@@ -95,6 +109,19 @@ export async function removePoi(id: string): Promise<void> {
   await assertItemsEditable(p.layerId);
   await db.pois.delete(id);
   await afterWrite();
+}
+
+/** Merge into the stored style override (reads fresh state, so rapid picker changes don't clobber each other). */
+export async function updatePoiStyle(id: string, patch: StyleOverride): Promise<Poi> {
+  const next = await rw(async () => {
+    const p = await getPoi(id);
+    await assertItemsEditable(p.layerId);
+    const n = { ...p, style: { ...p.style, ...patch }, updatedAt: nowIso() };
+    await db.pois.put(n);
+    return n;
+  });
+  await afterWrite();
+  return next;
 }
 
 export async function clearPoiStyle(id: string): Promise<Poi> {

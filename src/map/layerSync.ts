@@ -5,6 +5,7 @@ import { closeReader } from '../raster/mbtilesProtocol';
 import { on } from '../util/events';
 import { normalizeBounds, padBounds, unionBounds, type Bounds } from '../util/geo';
 import { isVectorMapLayer, rasterLayerId, rasterSourceKey } from './layerIds';
+import { reconcileVector, type VectorSyncState } from './vectorSync';
 
 const MAX_BOUNDS_PAD_M = 3000;
 
@@ -12,7 +13,8 @@ const MAX_BOUNDS_PAD_M = 3000;
  * DB -> map. Raster rules: a layer exists on the map iff it is not frozen; hidden layers
  * keep their source but get visibility:none. Rebuilds only what changed.
  */
-export function startLayerSync(map: MlMap): () => void {
+export function startLayerSync(map: MlMap, opts: { labels: boolean } = { labels: false }): () => void {
+  const vstate: VectorSyncState = { labels: opts.labels, known: new Map() };
   const ready: Promise<void> = map.loaded() ? Promise.resolve() : new Promise((r) => map.once('load', () => r()));
   const known = new Map<string, { sourceId: string; sig: string }>(); // layerId -> state on map
   let queue: Promise<void> = Promise.resolve();
@@ -76,10 +78,12 @@ export function startLayerSync(map: MlMap): () => void {
     } else {
       map.setMaxBounds(null);
     }
+
+    await reconcileVector(map, vstate);
   }
 
   const run = () => { queue = queue.then(reconcile).catch((e) => console.error('layerSync failed', e)); };
-  const offs = [on('layers', run), on('rasters', run)];
+  const offs = [on('layers', run), on('rasters', run), on('pois', run), on('features', run)];
   run();
   return () => offs.forEach((off) => off());
 }

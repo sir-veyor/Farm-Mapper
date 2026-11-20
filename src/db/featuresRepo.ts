@@ -42,22 +42,30 @@ export async function addFeatures(layerId: string, inputs: NewFeature[]): Promis
 
 export type FeaturePatch = Partial<Pick<VectorFeature, 'name' | 'notes' | 'style' | 'extra'>>;
 
+const rw = <T,>(fn: () => Promise<T>): Promise<T> => db.transaction('rw', db.features, db.layers, fn);
+
 export async function updateFeature(id: string, patch: FeaturePatch): Promise<VectorFeature> {
-  const f = await getFeature(id);
-  await assertItemsEditable(f.layerId);
-  const next = { ...f, ...patch, updatedAt: nowIso() };
-  await db.features.put(next);
+  const next = await rw(async () => {
+    const f = await getFeature(id);
+    await assertItemsEditable(f.layerId);
+    const n = { ...f, ...patch, updatedAt: nowIso() };
+    await db.features.put(n);
+    return n;
+  });
   await afterWrite();
   return next;
 }
 
 export async function moveFeatureToLayer(id: string, layerId: string): Promise<VectorFeature> {
-  const f = await getFeature(id);
-  await assertItemsEditable(f.layerId);
-  const dest = await assertItemsEditable(layerId);
-  if (dest.kind !== 'vector') throw new Error('Destination must be a vector layer.');
-  const next = { ...f, layerId, updatedAt: nowIso() };
-  await db.features.put(next);
+  const next = await rw(async () => {
+    const f = await getFeature(id);
+    await assertItemsEditable(f.layerId);
+    const dest = await assertItemsEditable(layerId);
+    if (dest.kind !== 'vector') throw new Error('Destination must be a vector layer.');
+    const n = { ...f, layerId, updatedAt: nowIso() };
+    await db.features.put(n);
+    return n;
+  });
   await afterWrite();
   return next;
 }
@@ -67,4 +75,16 @@ export async function removeFeature(id: string): Promise<void> {
   await assertItemsEditable(f.layerId);
   await db.features.delete(id);
   await afterWrite();
+}
+
+export async function updateFeatureStyle(id: string, patch: StyleOverride): Promise<VectorFeature> {
+  const next = await rw(async () => {
+    const f = await getFeature(id);
+    await assertItemsEditable(f.layerId);
+    const n = { ...f, style: { ...f.style, ...patch }, updatedAt: nowIso() };
+    await db.features.put(n);
+    return n;
+  });
+  await afterWrite();
+  return next;
 }

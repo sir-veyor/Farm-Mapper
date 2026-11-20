@@ -134,3 +134,18 @@ describe('writes', () => {
     expect((await layers.getLayer(a.id)).order).toBeGreaterThan((await layers.getLayer(b.id)).order);
   });
 });
+
+describe('concurrent edits', () => {
+  it('autosave of text and a style change at the same time never lose either', async () => {
+    const id = await activeId();
+    const p = await pois.addPoi({ layerId: id, ...pt });
+    await Promise.all([
+      pois.updatePoi(p.id, { name: 'Stand A', notes: 'oak' }),
+      pois.updatePoiStyle(p.id, { symbol: 'treestand' }),
+      pois.updatePoiStyle(p.id, { symbolColor: '#e03131' }),
+    ]);
+    const r = await pois.getPoi(p.id);
+    expect(r.name).toBe('Stand A'); expect(r.notes).toBe('oak');
+    expect(r.style).toEqual({ symbol: 'treestand', symbolColor: '#e03131' });
+  });
+});

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document><name>Farm test</name>
+  <Style id="trail"><LineStyle><color>ff0080ff</color><width>4</width></LineStyle></Style>
+  <Style id="bound"><LineStyle><color>ff0000ff</color><width>2</width></LineStyle><PolyStyle><color>4000ff00</color></PolyStyle></Style>
+  <Style id="pt"><IconStyle><color>ffff0000</color><Icon><href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href></Icon></IconStyle></Style>
+  <StyleMap id="sm"><Pair><key>normal</key><styleUrl>#trail</styleUrl></Pair><Pair><key>highlight</key><styleUrl>#trail</styleUrl></Pair></StyleMap>
+  <Folder><name>Trails</name>
+    <Placemark><name>North loop</name><description><![CDATA[<b>Easy</b> walk<br>2 km &amp; flat]]></description><styleUrl>#sm</styleUrl>
+      <LineString><coordinates>-77.481,42.399,100 -77.480,42.400,101 -77.479,42.399,102</coordinates></LineString></Placemark>
+    <Placemark><name>Boundary</name><styleUrl>#bound</styleUrl><Polygon>
+      <outerBoundaryIs><LinearRing><coordinates>-77.482,42.398 -77.478,42.398 -77.478,42.402 -77.482,42.402 -77.482,42.398</coordinates></LinearRing></outerBoundaryIs>
+      <innerBoundaryIs><LinearRing><coordinates>-77.481,42.399 -77.479,42.399 -77.479,42.401 -77.481,42.401 -77.481,42.399</coordinates></LinearRing></innerBoundaryIs></Polygon></Placemark>
+  </Folder>
+  <Folder><name>Stands</name>
+    <Placemark><name>Stand 1</name><styleUrl>#pt</styleUrl><ExtendedData><Data name="species"><value>deer</value></Data></ExtendedData><Point><coordinates>-77.4805,42.3995,0</coordinates></Point></Placemark>
+    <Placemark><name>Multi</name><MultiGeometry><Point><coordinates>-77.4801,42.3991</coordinates></Point><LineString><coordinates>-77.4801,42.3991 -77.4799,42.3992</coordinates></LineString></MultiGeometry></Placemark>
+    <Placemark><name>No geometry</name></Placemark>
+  </Folder>
+  <Placemark><name>Loose point</name><Point><coordinates>-77.4795,42.3999</coordinates></Point></Placemark>
+  <NetworkLink><name>Live feed</name><Link><href>http://example.com/live.kml</href></Link></NetworkLink>
+  <GroundOverlay><name>Overlay</name><Icon><href>x.png</href></Icon></GroundOverlay>
+</Document></kml>

@@ -1,11 +1,33 @@
 # Farm Mapper
 
-Offline-first parcel field-mapping PWA: pin points of interest, import MBTiles imagery/DEM and KML/KMZ,
-organise features in layers with Show/Hide, Freeze and Lock, and export selected layers.
+Offline-first parcel field-mapping PWA: pin points of interest (GPS, averaged GPS, or by tap), import MBTiles
+imagery/DEM and KML/KMZ, organise features in layers with **Show/Hide**, **Freeze** and **Lock**, restyle anything,
+and export selected layers as KMZ, KML or GeoJSON. Maps and pins stay on the device; nothing is uploaded.
 
-- Plan and specification: [PLAN.md](PLAN.md)
+- Specification and build plan: [PLAN.md](PLAN.md)
 - Develop: `npm install`, `npm run dev`
-- Test: `npm test`
-- Build: `npm run build` (output in `dist/`)
+- Test: `npm test` (unit tests run in Node/jsdom with an in-memory IndexedDB)
+- Build: `npm run build` (output in `dist/`); pushes to `main` deploy to GitHub Pages
 
-Maps and pins stay on the device. Nothing is uploaded; map files are loaded from the phone's storage.
+## Layer states
+
+| | Drawn | Editable | Layer deletable |
+|---|---|---|---|
+| Normal | yes | yes | yes |
+| Hidden (eye off) | no (stays loaded) | no | yes |
+| Frozen (snowflake) | **no** (removed from the map, reader closed) | no | yes |
+| Locked (padlock) | yes | **no** (read-only details on tap) | **no** |
+
+## Bundled data
+
+`public/data/` holds the orthoimagery and the DEM (cropped to the imagery footprint). On first launch the app downloads
+them once and stores them in the browser as ordinary raster layers. They are not part of the offline cache that installs
+with the app. Bump `BUNDLE_VERSION` in `src/raster/bundledData.ts` when the files change.
+
+## Deviations from the plan
+
+- Moving a pin is **tap-to-place** (Move, then tap the new spot) instead of dragging, which avoids accidental drags on touch screens.
+- Backups are restored from the **Backup** dialog; the Import dialog takes `.mbtiles`, `.kml` and `.kmz`.
+- `sql-wasm-browser.wasm` (not `sql-wasm.wasm`) is shipped, because the bundler uses sql.js's browser build.
+- Known limitation: a note containing the literal text `]]>` is exported as valid KML but only its first part survives re-import.
+- Added dev-only packages: `fake-indexeddb` and `jsdom` (tests), `@types/sql.js`.

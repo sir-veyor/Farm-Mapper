@@ -2,9 +2,13 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef } from 'react';
 import type { Map as MlMap } from 'maplibre-gl';
 import { patchSettings, getSettings } from '../db/settingsRepo';
+import { startGpsMarker } from '../map/gpsMarker';
+import { installIconLoader } from '../map/iconImages';
+import { startInteraction } from '../map/interaction';
 import { startLayerSync } from '../map/layerSync';
 import { setMap } from '../map/mapHandle';
-import { createMap } from '../map/mapInit';
+import { createMap, glyphsAvailable } from '../map/mapInit';
+import { startSelectionLayer } from '../map/selectionLayer';
 import { registerMbtilesProtocol } from '../raster/mbtilesProtocol';
 
 export function MapView({ onReady }: { onReady?: (map: MlMap) => void }) {
@@ -13,21 +17,26 @@ export function MapView({ onReady }: { onReady?: (map: MlMap) => void }) {
   useEffect(() => {
     let map: MlMap | undefined;
     let cancelled = false;
-    let stopSync: (() => void) | undefined;
+    const stops: (() => void)[] = [];
     (async () => {
       const s = await getSettings();
       if (cancelled || !el.current) return;
       registerMbtilesProtocol();
       map = createMap(el.current, s.lastView);
       setMap(map);
-      stopSync = startLayerSync(map);
+      if (new URLSearchParams(location.search).has('debugTiles')) (window as unknown as { __map: MlMap }).__map = map; // test hook
+      installIconLoader(map);
+      const labels = await glyphsAvailable();
+      if (cancelled) return;
+      // Overlays first so their map layers exist before vector layers are stacked beneath them.
+      stops.push(startSelectionLayer(map), startGpsMarker(map), startLayerSync(map, { labels }), startInteraction(map));
       map.on('moveend', () => {
         const c = map!.getCenter();
         void patchSettings({ lastView: { lon: c.lng, lat: c.lat, zoom: map!.getZoom(), bearing: map!.getBearing() } });
       });
       onReady?.(map);
     })();
-    return () => { cancelled = true; stopSync?.(); setMap(null); map?.remove(); };
+    return () => { cancelled = true; stops.forEach((f) => f()); setMap(null); map?.remove(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

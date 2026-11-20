@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { getSettings, patchSettings } from '../db/settingsRepo';
+import { useLive } from './useLive';
 
 interface Info { persisted: boolean | null; usedMb: number; quotaMb: number }
 
@@ -6,6 +8,7 @@ export function AboutPanel() {
   const [open, setOpen] = useState(false);
   const [info, setInfo] = useState<Info | null>(null);
   const [online, setOnline] = useState(navigator.onLine);
+  const settings = useLive(getSettings, ['settings']);
 
   useEffect(() => {
     const up = () => setOnline(true), down = () => setOnline(false);
@@ -36,6 +39,14 @@ export function AboutPanel() {
           <div>Storage persistent: <b>{info.persisted === null ? 'unknown' : info.persisted ? 'yes' : 'NO'}</b></div>
           <div>Used {info.usedMb.toFixed(1)} MB of {info.quotaMb.toFixed(0)} MB</div>
           {info.persisted === false && <div style={{ color: '#a33' }}>Install the app to the home screen to protect your data.</div>}
+          {settings && (
+            <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
+              <label>Units <select value={settings.units} onChange={(e) => void patchSettings({ units: e.target.value as 'metric' | 'imperial' })}>
+                <option value="metric">metric (m)</option><option value="imperial">imperial (ft)</option></select></label>
+              <label>Averaging accepts fixes up to <input type="number" min={1} max={100} style={{ width: 50 }} value={settings.gps.maxAcceptAccuracyM}
+                onChange={(e) => void patchSettings({ gps: { ...settings.gps, maxAcceptAccuracyM: Math.max(1, Number(e.target.value) || 15) } })} /> m</label>
+            </div>
+          )}
         </div>
       )}
     </div>

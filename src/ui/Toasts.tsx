@@ -6,7 +6,7 @@ export function Toasts() {
   const toasts = useUi((s) => s.toasts);
   const dismiss = useUi((s) => s.dismissToast);
   return (
-    <div style={{ position: 'absolute', left: 8, right: 8, bottom: 56, zIndex: 20, display: 'flex',
+    <div style={{ position: 'absolute', left: 8, right: 8, bottom: 62, zIndex: 20, display: 'flex',
       flexDirection: 'column', gap: 6, alignItems: 'center', pointerEvents: 'none' }}>
       {toasts.map((t) => (
         <div key={t.id} onClick={() => dismiss(t.id)} role="status"
