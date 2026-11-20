@@ -22,6 +22,17 @@ and export selected layers as KMZ, KML or GeoJSON. Maps and pins stay on the dev
   Bed, Lost sign, Found) drop at your position on the same layer.
 - Distances are always feet.
 
+## Sharing pins and layers (no server)
+
+**Share** (in a pin's menu, or **Share layer** under a layer's ⋯ menu) makes a small `.json` file and opens the phone's share
+sheet (text, email, AirDrop), or downloads it if the browser cannot share files. The other person opens the app and uses
+**More > Import** to pick that file. Nothing is stored online.
+
+Duplicates are never reloaded: a pin is skipped if its id matches, or if a pin of the same name is within about 6 ft (so a
+stand both phones already have from the bundled data is not doubled); a line or area is skipped if the same name has the same
+shape. Items go into the receiver's layer of the same name (created with the sender's style if they have none); a locked or
+frozen layer is left alone. Share files are validated and cleaned on import (bad coordinates dropped, colours and sizes checked).
+
 ## Keeping it going
 
 - Deploys: every push to `main` runs the tests and publishes to GitHub Pages (`.github/workflows/deploy.yml`).

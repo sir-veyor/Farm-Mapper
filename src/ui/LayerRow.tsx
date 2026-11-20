@@ -4,6 +4,8 @@ import { layerBounds } from '../db/layerBounds';
 import { getMap } from '../map/mapHandle';
 import { act, useUi } from '../state/uiStore';
 import type { Layer } from '../types';
+import { canShareFiles, downloadFile, shareFile } from '../export/deliver';
+import { exportLayer } from '../share/shareService';
 import { fitSafe } from '../util/geo';
 import { resolveStyle } from '../util/style';
 import { StyleEditor } from './StyleEditor';
@@ -66,6 +68,10 @@ export function LayerRow({ layer, active, canUp, canDown, datumUnknown, count }:
             <button style={btn} disabled={!canUp} onClick={() => void act(moveLayer(layer.id, 'up'))}>Up</button>
             <button style={btn} disabled={!canDown} onClick={() => void act(moveLayer(layer.id, 'down'))}>Down</button>
             <button style={btn} onClick={() => void zoomTo()}>Zoom to</button>
+            {isVector && <button style={btn} data-testid={`share-layer-${layer.name}`} onClick={() => void act(async () => {
+              const file = await exportLayer(layer.id);
+              if (canShareFiles(file)) { await shareFile(file); } else { downloadFile(file); toast('Share file saved. Send it to the other person; they open it from Import.', 'success'); }
+            })}>Share layer</button>}
             {isVector && <button style={btn} aria-pressed={styleOpen} onClick={() => setStyleOpen(!styleOpen)}>Layer style</button>}
             <button style={btnDanger} disabled={layer.locked} title={layer.locked ? 'Unlock first' : 'Delete layer'} onClick={() => void remove()}>Delete</button>
           </div>

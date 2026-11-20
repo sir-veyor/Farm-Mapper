@@ -3,6 +3,8 @@ import { importKml, summarize } from '../kml/kmlImport';
 import { KmlError } from '../kml/kmzUnpack';
 import { getMap } from '../map/mapHandle';
 import { MbtilesError } from '../raster/mbtilesMeta';
+import { ShareError } from '../share/shareFormat';
+import { importShareText, summarizeShare } from '../share/shareService';
 import { importMbtiles } from '../raster/rasterImport';
 import { useUi } from '../state/uiStore';
 import type { RasterSource } from '../types';
@@ -36,13 +38,19 @@ export function ImportDialog() {
         toast(summarize(s), 'success');
         if (s.bounds) { const b = fitSafe(s.bounds); getMap()?.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 50, maxZoom: 19, duration: 600 }); }
         useUi.getState().setPanel('layers');
+      } else if (ext === 'json') {
+        const r = await importShareText(await file.text());
+        toast(summarizeShare(r), r.addedPois || r.addedFeatures ? 'success' : 'info');
+        if (r.bounds) { const b = fitSafe(r.bounds); getMap()?.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 18, duration: 600 }); }
+        if (r.onlyPoiId) useUi.getState().select({ kind: 'poi', id: r.onlyPoiId });
+        else if (r.layersCreated.length) useUi.getState().setPanel('layers');
       } else {
-        toast('Choose a .mbtiles, .kml or .kmz file. (Backups are restored from the Backup button.)', 'error');
+        toast('Choose a .mbtiles, .kml, .kmz or shared .json file. (Backups are restored from the Backup button.)', 'error');
         return;
       }
       setOpen(false);
     } catch (e) {
-      toast(e instanceof MbtilesError || e instanceof KmlError ? e.message : `Import failed: ${(e as Error).message}`, 'error');
+      toast(e instanceof MbtilesError || e instanceof KmlError || e instanceof ShareError ? e.message : `Import failed: ${(e as Error).message}`, 'error');
     } finally { setBusy(false); }
   }
 
@@ -61,7 +69,8 @@ export function ImportDialog() {
           <label style={{ display: 'block' }}><input type="checkbox" checked={shift} onChange={(e) => setShift(e.target.checked)} /> Coordinates are NAD83 (county/state GIS): apply datum shift</label>
           <div style={{ font: '12px system-ui', color: '#666' }}>Leave the shift off for files from Google Earth, phones, or this app.</div>
         </fieldset>
-        <input type="file" accept=".mbtiles,.kml,.kmz" disabled={busy} data-testid="import-file"
+        <div style={{ font: '12px system-ui', color: '#666', margin: '0 0 8px' }}>Pins or layers someone sent you from Share (.json): anything you already have is skipped.</div>
+        <input type="file" accept=".mbtiles,.kml,.kmz,.json" disabled={busy} data-testid="import-file"
           onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ''; }} />
         {busy && <p>Reading file...</p>}
         <div style={{ marginTop: 12, textAlign: 'right' }}><button style={btn} onClick={() => setOpen(false)} disabled={busy}>Close</button></div>

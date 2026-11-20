@@ -3,7 +3,9 @@ import { db } from '../db/db';
 import { getLayer, listLayers } from '../db/layersRepo';
 import { clearPoiStyle, movePoiToLayer, removePoi, updatePoi, updatePoiStyle } from '../db/poisRepo';
 import { getSettings } from '../db/settingsRepo';
+import { canShareFiles, downloadFile, shareFile } from '../export/deliver';
 import { startNavigation } from '../nav/navigation';
+import { exportPoi } from '../share/shareService';
 import { act, useUi } from '../state/uiStore';
 import { formatDistance } from '../util/geo';
 import { resolveStyle } from '../util/style';
@@ -83,6 +85,10 @@ export function PoiEditor({ id }: { id: string }) {
         <button style={btn} disabled={readOnly} onClick={() => { setTool({ type: 'movePoi', id }); toast('Tap the new location on the map.', 'info'); }}>Move</button>
         <button style={btn} disabled={readOnly || !Object.keys(poi.style).length} onClick={() => void act(clearPoiStyle(id))}>Reset to layer style</button>
         <button style={btnDanger} disabled={readOnly} onClick={() => void remove()}>Delete</button>
+        <button style={btn} data-testid="share-pin" onClick={() => void act(async () => {
+          const file = await exportPoi(id);
+          if (canShareFiles(file)) { await shareFile(file); } else { downloadFile(file); toast('Share file saved. Send it to the other person; they open it from Import.', 'success'); }
+        })}>Share</button>
         <button style={btn} onClick={close}>Done</button>
       </div>
     </Sheet>
