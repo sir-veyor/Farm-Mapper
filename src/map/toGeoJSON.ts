@@ -11,7 +11,7 @@ export function layerToGeoJSON(
     out.push({
       type: 'Feature', geometry: f.geometry,
       properties: {
-        _kind: 'feature', _id: f.id, _stroke: s.strokeColor, _strokeW: s.strokeWidth, _strokeO: s.strokeOpacity,
+        _kind: 'feature', _id: f.id, _stroke: s.strokeColor, _strokeW: s.strokeWidth, _strokeO: s.strokeOpacity, _dash: s.strokeDash,
         _fill: s.fillColor, _fillO: s.fillOpacity, _label: s.showLabels ? f.name : '',
       },
     });

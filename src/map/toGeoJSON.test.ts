@@ -20,6 +20,11 @@ describe('layerToGeoJSON', () => {
     expect(b.properties).toMatchObject({ _icon: 'poi|tree|#ffffff', _label: '' });
     expect(a.geometry).toEqual({ type: 'Point', coordinates: [-77.48, 42.4] });
   });
+  it('carries the dash style (layer default, item override)', () => {
+    const l = { defaultStyle: { ...layer.defaultStyle, strokeDash: 'dashed' as const } };
+    const fc = layerToGeoJSON(l, [], [feat, { ...feat, id: 'f2', style: { strokeDash: 'dotted' } }]);
+    expect(fc.features.map((f) => f.properties?._dash)).toEqual(['dashed', 'dotted']);
+  });
   it('recolours non-overridden items when the layer default changes', () => {
     const l2 = { defaultStyle: { ...layer.defaultStyle, symbolColor: '#00ff00' as const } };
     expect(layerToGeoJSON(l2, [poi()], []).features[0].properties?._icon).toBe('poi|tree|#00ff00');

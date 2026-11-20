@@ -7,6 +7,7 @@ export const APP_DEFAULT_STYLE: Style = {
   strokeColor: '#e8590c',
   strokeWidth: 3,
   strokeOpacity: 1,
+  strokeDash: 'solid',
   fillColor: '#e8590c',
   fillOpacity: 0.25,
   symbol: 'pin',

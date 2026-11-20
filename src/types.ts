@@ -9,6 +9,7 @@ export interface Style {
   strokeColor: HexColor;
   strokeWidth: number;   // CSS px, 0.5-12
   strokeOpacity: number; // 0-1
+  strokeDash: 'solid' | 'dashed' | 'dotted';
   fillColor: HexColor;
   fillOpacity: number;   // 0-1
   symbol: SymbolId;

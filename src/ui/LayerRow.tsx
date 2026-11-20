@@ -5,6 +5,7 @@ import { getMap } from '../map/mapHandle';
 import { act, useUi } from '../state/uiStore';
 import type { Layer } from '../types';
 import { fitSafe } from '../util/geo';
+import { resolveStyle } from '../util/style';
 import { StyleEditor } from './StyleEditor';
 import { btn, btnDanger, btnOn, input } from './styles';
 
@@ -73,7 +74,7 @@ export function LayerRow({ layer, active, canUp, canDown, datumUnknown, count }:
               <div style={{ font: '12px system-ui', color: '#555', marginBottom: 4 }}>
                 Default style for items in this layer (items with their own style keep it).
               </div>
-              <StyleEditor value={layer.defaultStyle} parts={{ line: true, fill: true, point: true }} disabled={layer.locked}
+              <StyleEditor value={resolveStyle(layer)} parts={{ line: true, fill: true, point: true }} disabled={layer.locked}
                 onChange={(p) => void act(setDefaultStyle(layer.id, p))} />
             </div>
           )}

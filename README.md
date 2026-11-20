@@ -27,8 +27,13 @@ with the app. Bump `BUNDLE_VERSION` in `src/raster/bundledData.ts` when the file
 The parcel **Boundary**, **Trails** and **Tree Stands** layers are compiled into the app (`src/data/`), so they
 appear on first launch with no network. Each is added once per device (remembered by key in settings), so anything you
 delete, move or restyle is never put back. To add more, extend `BUNDLED_VECTORS` in `src/data/bundledVectors.ts`.
-The trail data was de-duplicated (the CAD export stored every segment twice), stitched into continuous lines and
-simplified within 2 cm.
+The **Trails** layer is the surveyed centerline set (`CL_Trails.dxf`, 26 polylines, 6.95 km): converted from NAD83(2011)
+New York Central state plane (EPSG:6535, US survey feet) to lon/lat and shifted to WGS84 with the same constant used for the
+imagery (`NAD83_TO_WGS84_SHIFT` in `src/config.ts`), so lines, imagery and GPS agree. It is drawn dashed; line style
+(solid / dashed / dotted) is a per-layer default that any item can override.
+
+One-time migrations in `src/data/seedBundledVectors.ts` upgrade devices seeded by earlier versions (old two-edge trails ->
+centerlines, numbered stand names -> unnumbered) without touching locked layers or names you edited.
 
 ## Deviations from the plan
 

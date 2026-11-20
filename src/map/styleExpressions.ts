@@ -6,6 +6,20 @@ const isPoint = ['==', GEOM, 'Point'];
 const isPolygon = ['==', GEOM, 'Polygon']; // also matches MultiPolygon
 const isLine = ['==', GEOM, 'LineString'];
 
+const lineOrArea = ['any', isLine, isPolygon];
+const dashIs = (d: string) => ['==', ['coalesce', ['get', '_dash'], 'solid'], d];
+
+/** line-dasharray cannot vary per feature, so there is one map layer per dash style, each filtered on `_dash`. */
+function lineSpecs(ids: ReturnType<typeof vectorLayerIds>, source: string, opacity: number, vis: 'visible' | 'none'): LayerSpecification[] {
+  const paint = { 'line-color': ['get', '_stroke'], 'line-width': ['get', '_strokeW'], 'line-opacity': ['*', ['get', '_strokeO'], opacity] };
+  const mk = (id: string, dash: string, cap: 'round' | 'butt', pattern?: number[]) => ({
+    id, type: 'line', source, filter: ['all', lineOrArea, dashIs(dash)] as never,
+    layout: { visibility: vis, 'line-cap': cap, 'line-join': 'round' },
+    paint: { ...paint, ...(pattern ? { 'line-dasharray': pattern } : {}) },
+  }) as unknown as LayerSpecification;
+  return [mk(ids.line, 'solid', 'round'), mk(ids.dash, 'dashed', 'butt', [3, 2]), mk(ids.dot, 'dotted', 'round', [0.01, 2.2])];
+}
+
 /** Paint/layout for one vector layer's four map layers. Colours/widths come from per-feature `_` props. */
 export function vectorLayerSpecs(layerId: string, sourceKey: string, opacity: number, visible: boolean, labels: boolean): LayerSpecification[] {
   const ids = vectorLayerIds(layerId);
@@ -15,11 +29,7 @@ export function vectorLayerSpecs(layerId: string, sourceKey: string, opacity: nu
       id: ids.fill, type: 'fill', source: sourceKey, filter: isPolygon as never, layout: { visibility: vis },
       paint: { 'fill-color': ['get', '_fill'], 'fill-opacity': ['*', ['get', '_fillO'], opacity] },
     },
-    {
-      id: ids.line, type: 'line', source: sourceKey, filter: ['any', isLine, isPolygon] as never,
-      layout: { visibility: vis, 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': ['get', '_stroke'], 'line-width': ['get', '_strokeW'], 'line-opacity': ['*', ['get', '_strokeO'], opacity] },
-    },
+    ...lineSpecs(ids, sourceKey, opacity, vis),
     {
       id: ids.point, type: 'symbol', source: sourceKey, filter: isPoint as never,
       layout: {

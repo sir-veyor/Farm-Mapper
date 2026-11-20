@@ -1,7 +1,7 @@
 import type { Style } from '../types';
 import { ColorPicker } from './ColorPicker';
 import { SymbolPicker } from './SymbolPicker';
-import { label } from './styles';
+import { input, label } from './styles';
 
 export interface StyleParts { line?: boolean; fill?: boolean; point?: boolean }
 
@@ -28,6 +28,11 @@ export function StyleEditor({ value, onChange, parts, disabled }:
           <span style={label}>Line width ({value.strokeWidth.toFixed(1)} px)</span>
           <input type="range" min={0.5} max={12} step={0.5} value={value.strokeWidth} disabled={disabled} style={{ width: '100%' }}
             onChange={(e) => onChange({ strokeWidth: Number(e.target.value) })} />
+          <span style={label}>Line style</span>
+          <select aria-label="Line style" value={value.strokeDash ?? 'solid'} disabled={disabled} style={{ ...input, width: 'auto' }}
+            onChange={(e) => onChange({ strokeDash: e.target.value as Style['strokeDash'] })}>
+            <option value="solid">Solid</option><option value="dashed">Dashed</option><option value="dotted">Dotted</option>
+          </select>
           <span style={label}>Line opacity ({Math.round(value.strokeOpacity * 100)}%)</span>
           <input type="range" min={0} max={1} step={0.05} value={value.strokeOpacity} disabled={disabled} style={{ width: '100%' }}
             onChange={(e) => onChange({ strokeOpacity: Number(e.target.value) })} />

@@ -3,6 +3,9 @@ import boundaryData from './boundary.json';
 import trailsData from './trails.json';
 import { TREE_STANDS } from './treeStands';
 
+/** "Single stand 2" -> "Single stand", "single stand (2)" -> "single stand". */
+export const stripNumbering = (name: string): string => name.replace(/\s*\(\d+\)\s*$/, '').replace(/\s+\d+\s*$/, '');
+
 export interface BundledFeature { name: string; geometry: LineOrPolygon; extra?: Record<string, string> }
 export interface BundledStand { name: string; notes: string; lon: number; lat: number }
 
@@ -30,7 +33,7 @@ export const BUNDLED_VECTORS: BundledVectorLayer[] = [
   },
   {
     key: 'trails', name: 'Trails', sourceFile: 'Farm Trails.kmz',
-    style: { strokeColor: '#fcc419', strokeWidth: 2.5, strokeOpacity: 1 },
+    style: { strokeColor: '#fcc419', strokeWidth: 2.5, strokeOpacity: 1, strokeDash: 'dashed' },
     features: toFeatures(trailsData as Raw[]), stands: [],
   },
   {

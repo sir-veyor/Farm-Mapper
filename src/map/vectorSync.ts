@@ -47,7 +47,7 @@ export async function reconcileVector(map: MlMap, st: VectorSyncState): Promise<
       const vis = l.visible ? 'visible' : 'none';
       for (const id of Object.values(ids)) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
       map.setPaintProperty(ids.fill, 'fill-opacity', ['*', ['get', '_fillO'], l.opacity]);
-      map.setPaintProperty(ids.line, 'line-opacity', ['*', ['get', '_strokeO'], l.opacity]);
+      for (const lid of [ids.line, ids.dash, ids.dot]) map.setPaintProperty(lid, 'line-opacity', ['*', ['get', '_strokeO'], l.opacity]);
       map.setPaintProperty(ids.point, 'icon-opacity', l.opacity);
       if (map.getLayer(ids.label)) map.setPaintProperty(ids.label, 'text-opacity', l.opacity);
     }
@@ -57,6 +57,6 @@ export async function reconcileVector(map: MlMap, st: VectorSyncState): Promise<
   const anchor = map.getStyle().layers.find((x) => isOverlayAnchor(x.id))?.id;
   for (const l of vectors) {
     const ids = vectorLayerIds(l.id);
-    for (const id of [ids.fill, ids.line, ids.point, ids.label]) if (map.getLayer(id)) map.moveLayer(id, anchor);
+    for (const id of [ids.fill, ids.line, ids.dash, ids.dot, ids.point, ids.label]) if (map.getLayer(id)) map.moveLayer(id, anchor);
   }
 }
