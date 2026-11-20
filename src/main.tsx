@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
+import { seedBundledVectors } from './data/seedBundledVectors';
 import { ensureSeed } from './db/seed';
 import { getMap } from './map/mapHandle';
 import { seedBundledRasters } from './raster/bundledData';
@@ -10,6 +11,7 @@ import { App } from './ui/App';
 async function boot() {
   try { await navigator.storage?.persist?.(); } catch { /* not supported: ignore */ }
   await ensureSeed();
+  await seedBundledVectors(); // boundary, trails and tree stands are inside the app, so this works with no network
   registerSW({ immediate: true });
   createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
   // Not awaited: the app is usable immediately; layers appear as each file finishes importing.

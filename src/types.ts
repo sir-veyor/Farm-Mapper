@@ -107,5 +107,6 @@ export interface Settings {
   lastBackupAt: string | null;
   changesSinceBackup: number;
   bundledSeeded?: boolean; // legacy flag (= bundledVersion 1)
+  seededVectors?: string[]; // keys of bundled layers (boundary, trails, tree stands) already added once
   bundledVersion?: number; // which bundled map-data set this device has been given
 }
