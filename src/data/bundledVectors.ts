@@ -37,6 +37,11 @@ export const BUNDLED_VECTORS: BundledVectorLayer[] = [
     features: toFeatures(trailsData as Raw[]), stands: [],
   },
   {
+    key: 'tracking', name: 'Tracking', sourceFile: '',
+    style: { strokeColor: '#00b4d8', strokeWidth: 3.5, strokeOpacity: 0.95, strokeDash: 'solid' },
+    features: [], stands: [],
+  },
+  {
     key: 'tree-stands', name: 'Tree Stands', sourceFile: 'all_tree_stands.kmz',
     style: { symbol: 'treestand', symbolColor: '#f08c00' },
     features: [],

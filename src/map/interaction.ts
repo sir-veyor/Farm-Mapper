@@ -1,6 +1,7 @@
 import type { Map as MlMap, MapMouseEvent, MapTouchEvent, Point } from 'maplibre-gl';
 import { addPoi, movePoi } from '../db/poisRepo';
 import { getSettings } from '../db/settingsRepo';
+import { useMeasure } from '../state/measureStore';
 import { act, useUi } from '../state/uiStore';
 import { isInteractiveId } from './layerIds';
 
@@ -47,6 +48,12 @@ export function startInteraction(map: MlMap): () => void {
     }
     const ids = interactiveLayerIds(map);
     const r = HIT_RADIUS_PX;
+    if (tool.type === 'measure') { // snap to a nearby pin so you can measure stand to stand
+      const near = ids.length ? map.queryRenderedFeatures([[e.point.x - 14, e.point.y - 14], [e.point.x + 14, e.point.y + 14]], { layers: ids }).find((f) => f.geometry.type === 'Point') : undefined;
+      const c = near ? (near.geometry as GeoJSON.Point).coordinates : [e.lngLat.lng, e.lngLat.lat];
+      useMeasure.getState().add([c[0], c[1]]);
+      return;
+    }
     const hits = ids.length
       ? map.queryRenderedFeatures([[e.point.x - r, e.point.y - r], [e.point.x + r, e.point.y + r]], { layers: ids })
       : [];
@@ -77,6 +84,7 @@ export function startInteraction(map: MlMap): () => void {
 
   const onContext = (e: MapMouseEvent) => {
     e.preventDefault?.();
+    if (useUi.getState().tool.type !== 'none') return;
     cancel();
     suppressClickUntil = Date.now() + 500;
     void addPoiAt(e.lngLat.lng, e.lngLat.lat);

@@ -9,7 +9,8 @@ export const defaultSettings = (): Settings => ({
   activeLayerId: null,
   lastView: { ...DEFAULT_VIEW },
   gps: { averageSeconds: 30, maxAcceptAccuracyM: 15, timeoutS: 30 },
-  units: 'metric',
+  units: 'imperial', // the app always shows feet; field kept for old backups
+  activeTrackId: null,
   lastBackupAt: null,
   changesSinceBackup: 0,
 });

@@ -4,6 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import { seedBundledVectors } from './data/seedBundledVectors';
 import { ensureSeed } from './db/seed';
 import { getMap } from './map/mapHandle';
+import { noteInterruptedTrack } from './track/trackService';
 import { seedBundledRasters } from './raster/bundledData';
 import { useUi } from './state/uiStore';
 import { App } from './ui/App';
@@ -13,6 +14,12 @@ async function boot() {
   await ensureSeed();
   await seedBundledVectors(); // boundary, trails and tree stands are inside the app, so this works with no network
   registerSW({ immediate: true });
+  void noteInterruptedTrack();
+  if (new URLSearchParams(location.search).has('debugTiles')) { // test hook
+    const [{ useTrack }, { useGps }, { useCompass }] = await Promise.all([import('./track/trackService'), import('./gps/gpsService'), import('./nav/compassService')]);
+    const trackMod = await import('./track/trackService');
+    (window as unknown as Record<string, unknown>).__stores = { useTrack, useGps, useCompass, debug: trackMod._debugState };
+  }
   createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
   // Not awaited: the app is usable immediately; layers appear as each file finishes importing.
   void seedBundledRasters(useUi.getState().toast).then((added) => {

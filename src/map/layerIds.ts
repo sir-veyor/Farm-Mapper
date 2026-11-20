@@ -8,4 +8,4 @@ export const vectorLayerIds = (layerId: string) => ({
 });
 /** Map layers a tap may hit: vector fill/line/point layers that are currently visible. */
 export const isInteractiveId = (id: string): boolean => isVectorMapLayer(id) && !id.endsWith(':label');
-export const isOverlayAnchor = (id: string): boolean => id.startsWith('sel:') || id.startsWith('gps:');
+export const isOverlayAnchor = (id: string): boolean => ['sel:', 'gps:', 'nav:', 'meas:'].some((p) => id.startsWith(p));

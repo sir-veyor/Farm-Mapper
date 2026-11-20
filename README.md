@@ -9,6 +9,18 @@ and export selected layers as KMZ, KML or GeoJSON. Maps and pins stay on the dev
 - Test: `npm test` (unit tests run in Node/jsdom with an in-memory IndexedDB)
 - Build: `npm run build` (output in `dist/`); pushes to `main` deploy to GitHub Pages
 
+## Field tools
+
+- **Navigate**: open a pin and tap Navigate for distance (feet) and an arrow to it, plus a dashed guide line on the map.
+  The arrow uses your walking direction (GPS) when moving and the phone compass when still. Compasses report magnetic
+  north, so `MAGNETIC_DECLINATION_DEG` (src/config.ts, -11.0 at the parcel) is applied. iPhones ask for motion permission.
+- **Measure**: tap two or more points; taps near a pin snap to it. Shows feet and bearing for each leg and in total.
+- **Track**: records your path (a point every ~10 ft, poor fixes and GPS jumps filtered) onto the **Tracking** layer, saved
+  continuously. Pause/resume, stop, or resume any saved track later (a new segment, never a line across the gap). The screen
+  is kept awake while recording because phones stop GPS when it turns off. One-tap sign markers (Hit, Blood, Tracks, Hair,
+  Bed, Lost sign, Found) drop at your position on the same layer.
+- Distances are always feet.
+
 ## Layer states
 
 | | Drawn | Editable | Layer deletable |

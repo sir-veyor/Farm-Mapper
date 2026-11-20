@@ -3,6 +3,7 @@ import { db } from '../db/db';
 import { getLayer, listLayers } from '../db/layersRepo';
 import { clearPoiStyle, movePoiToLayer, removePoi, updatePoi, updatePoiStyle } from '../db/poisRepo';
 import { getSettings } from '../db/settingsRepo';
+import { startNavigation } from '../nav/navigation';
 import { act, useUi } from '../state/uiStore';
 import { formatDistance } from '../util/geo';
 import { resolveStyle } from '../util/style';
@@ -77,6 +78,8 @@ export function PoiEditor({ id }: { id: string }) {
       </select>
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+        <button style={{ ...btn, background: '#2f5d3a', color: '#fff', borderColor: '#2f5d3a' }} data-testid="navigate-btn"
+          onClick={() => { startNavigation({ lon: poi.lon, lat: poi.lat, name: poi.name }); select(null); }}>🧭 Navigate</button>
         <button style={btn} disabled={readOnly} onClick={() => { setTool({ type: 'movePoi', id }); toast('Tap the new location on the map.', 'info'); }}>Move</button>
         <button style={btn} disabled={readOnly || !Object.keys(poi.style).length} onClick={() => void act(clearPoiStyle(id))}>Reset to layer style</button>
         <button style={btnDanger} disabled={readOnly} onClick={() => void remove()}>Delete</button>

@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 
 export interface Toast { id: number; text: string; kind: 'info' | 'error' | 'success' }
-export type Panel = 'layers' | 'gps' | null;
+export type Panel = 'layers' | 'gps' | 'tracks' | null;
+export interface NavTarget { lon: number; lat: number; name: string }
 export type Selection = { kind: 'poi' | 'feature'; id: string };
-export type Tool = { type: 'none' } | { type: 'addPoi' } | { type: 'movePoi'; id: string };
+export type Tool = { type: 'none' } | { type: 'addPoi' } | { type: 'movePoi'; id: string } | { type: 'measure' };
 interface ConfirmReq { message: string; okLabel: string; resolve: (ok: boolean) => void }
 
 interface UiState {
@@ -15,6 +16,7 @@ interface UiState {
   selection: Selection | null;
   tool: Tool;
   follow: boolean;
+  nav: NavTarget | null;
   confirmReq: ConfirmReq | null;
   toast: (text: string, kind?: Toast['kind']) => void;
   dismissToast: (id: number) => void;
@@ -25,6 +27,7 @@ interface UiState {
   select: (s: Selection | null) => void;
   setTool: (t: Tool) => void;
   setFollow: (f: boolean) => void;
+  setNav: (n: NavTarget | null) => void;
   confirm: (message: string, okLabel?: string) => Promise<boolean>;
   resolveConfirm: (ok: boolean) => void;
 }
@@ -40,6 +43,7 @@ export const useUi = create<UiState>((set, get) => ({
   selection: null,
   tool: { type: 'none' },
   follow: false,
+  nav: null,
   confirmReq: null,
   toast: (text, kind = 'info') => {
     const id = nextId++;
@@ -54,6 +58,7 @@ export const useUi = create<UiState>((set, get) => ({
   select: (selection) => set({ selection, panel: selection ? null : get().panel }),
   setTool: (tool) => set({ tool }),
   setFollow: (follow) => set({ follow }),
+  setNav: (nav) => set({ nav }),
   confirm: (message, okLabel = 'Delete') =>
     new Promise<boolean>((resolve) => set({ confirmReq: { message, okLabel, resolve } })),
   resolveConfirm: (ok) => { get().confirmReq?.resolve(ok); set({ confirmReq: null }); },

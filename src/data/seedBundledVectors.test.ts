@@ -15,7 +15,8 @@ const byName = async (n: string) => (await db.layers.toArray()).find((l) => l.na
 
 describe('bundled data', () => {
   it('has the expected counts and everything is on the farm (WGS84)', () => {
-    const [boundary, trails, stands] = BUNDLED_VECTORS;
+    const [boundary, trails] = BUNDLED_VECTORS;
+    const stands = BUNDLED_VECTORS.find((d) => d.key === 'tree-stands')!;
     expect(boundary.features).toHaveLength(1);
     expect(trails.features.length).toBeGreaterThan(20);
     expect(trails.style.strokeDash).toBe('dashed');
@@ -35,8 +36,10 @@ describe('bundled data', () => {
 
 describe('seedBundledVectors', () => {
   it('creates Boundary, Trails and Tree Stands layers with their data and default styles', async () => {
-    expect(await seedBundledVectors()).toEqual(['Boundary', 'Trails', 'Tree Stands']);
+    expect(await seedBundledVectors()).toEqual(['Boundary', 'Trails', 'Tracking', 'Tree Stands']);
     const [b, t, s] = [await byName('Boundary'), await byName('Trails'), await byName('Tree Stands')];
+    expect((await byName('Tracking')).defaultStyle.strokeColor).toBe('#00b4d8');
+    expect(await db.features.where('layerId').equals((await byName('Tracking')).id).count()).toBe(0);
     expect(await db.features.where('layerId').equals(b.id).count()).toBe(1);
     expect(await db.features.where('layerId').equals(t.id).count()).toBe(BUNDLED_VECTORS[1].features.length);
     expect(await db.pois.where('layerId').equals(s.id).count()).toBe(18);
@@ -55,7 +58,7 @@ describe('seedBundledVectors', () => {
   });
   it('adds only layers not yet seeded (e.g. a device that already has the boundary)', async () => {
     await patchSettings({ seededVectors: ['boundary'] });
-    expect(await seedBundledVectors()).toEqual(['Trails', 'Tree Stands']);
+    expect(await seedBundledVectors()).toEqual(['Trails', 'Tracking', 'Tree Stands']);
     expect((await db.layers.toArray()).some((l) => l.name === 'Boundary')).toBe(false);
   });
   it('uses your own editable layer of the same name, but never a locked one', async () => {
@@ -80,7 +83,7 @@ describe('stripNumbering and stand names', () => {
     expect(stripNumbering('North East facing')).toBe('North East facing');
   });
   it('no bundled stand name ends in a number', () => {
-    for (const s of BUNDLED_VECTORS[2].stands) expect(s.name).not.toMatch(/\d\s*\)?\s*$/);
+    for (const s of BUNDLED_VECTORS.find((d) => d.key === 'tree-stands')!.stands) expect(s.name).not.toMatch(/\d\s*\)?\s*$/);
   });
 });
 
@@ -96,7 +99,7 @@ describe('migration of devices seeded by the earlier version', () => {
       geometry: { type: 'LineString' as const, coordinates: [[-77.48, 42.4], [-77.479, 42.4]] }, extra: { cad_id: `ABC${i}` },
       source: { kind: 'import' as const, fileName: 'Farm Trails.kmz', importedAt: '', datumShiftApplied: false }, createdAt: '', updatedAt: '' })));
     const stands = await createVectorLayer('Tree Stands');
-    const [a, b] = BUNDLED_VECTORS[2].stands;
+    const [a, b] = BUNDLED_VECTORS.find((d) => d.key === 'tree-stands')!.stands;
     await db.pois.bulkAdd([
       { id: 'p1', layerId: stands.id, name: `${a.name} 1`, notes: a.notes, lon: a.lon, lat: a.lat, origin: 'import', style: {}, createdAt: '', updatedAt: '' },
       { id: 'p2', layerId: stands.id, name: 'My renamed stand 2', notes: b.notes, lon: b.lon, lat: b.lat, origin: 'import', style: {}, createdAt: '', updatedAt: '' },
@@ -110,7 +113,7 @@ describe('migration of devices seeded by the earlier version', () => {
     expect(fs.length).toBe(BUNDLED_VECTORS[1].features.length);
     expect(fs.some((f) => f.extra?.cad_id)).toBe(false);
     expect((await db.layers.get(trails.id))!.defaultStyle.strokeDash).toBe('dashed');
-    expect((await db.pois.get('p1'))!.name).toBe(BUNDLED_VECTORS[2].stands[0].name);
+    expect((await db.pois.get('p1'))!.name).toBe(BUNDLED_VECTORS.find((d) => d.key === 'tree-stands')!.stands[0].name);
     expect((await db.pois.get('p2'))!.name).toBe('My renamed stand 2'); // your edit survives
     await seedBundledVectors(); // second run changes nothing
     expect(await db.features.where('layerId').equals(trails.id).count()).toBe(BUNDLED_VECTORS[1].features.length);

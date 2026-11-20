@@ -52,7 +52,9 @@ export function FeatureEditor({ id }: { id: string }) {
       <div style={{ font: '13px system-ui', color: '#444', margin: '6px 0' }}>
         {m.areaM2 !== undefined && <>Area {formatAcres(m.areaM2)} · </>}
         {m.lengthM !== undefined && <>{isArea ? 'Perimeter' : 'Length'} {formatDistance(m.lengthM, units)}</>}
-        <br />From {feat.source.fileName}
+        <br />{feat.source.kind === 'track'
+          ? `Walked ${formatDistance(feat.source.distanceM)} in ${Math.floor(feat.source.durationS / 3600)}h ${Math.floor((feat.source.durationS % 3600) / 60)}m, started ${new Date(feat.source.startedAt).toLocaleString()}`
+          : `From ${feat.source.fileName}`}
       </div>
       <StyleEditor value={style} parts={{ line: true, fill: isArea }} disabled={readOnly} onChange={(p) => void act(updateFeatureStyle(id, p))} />
       <span style={label}>Layer</span>

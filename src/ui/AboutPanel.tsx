@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSettings, patchSettings } from '../db/settingsRepo';
+import { toFeet, toMeters } from '../util/geo';
 import { useLive } from './useLive';
 
 interface Info { persisted: boolean | null; usedMb: number; quotaMb: number }
@@ -41,10 +42,8 @@ export function AboutPanel() {
           {info.persisted === false && <div style={{ color: '#a33' }}>Install the app to the home screen to protect your data.</div>}
           {settings && (
             <div style={{ marginTop: 6, display: 'grid', gap: 4 }}>
-              <label>Units <select value={settings.units} onChange={(e) => void patchSettings({ units: e.target.value as 'metric' | 'imperial' })}>
-                <option value="metric">metric (m)</option><option value="imperial">imperial (ft)</option></select></label>
-              <label>Averaging accepts fixes up to <input type="number" min={1} max={100} style={{ width: 50 }} value={settings.gps.maxAcceptAccuracyM}
-                onChange={(e) => void patchSettings({ gps: { ...settings.gps, maxAcceptAccuracyM: Math.max(1, Number(e.target.value) || 15) } })} /> m</label>
+              <label>Averaging accepts fixes up to <input type="number" min={3} max={330} style={{ width: 56 }} value={Math.round(toFeet(settings.gps.maxAcceptAccuracyM))}
+                onChange={(e) => void patchSettings({ gps: { ...settings.gps, maxAcceptAccuracyM: toMeters(Math.max(3, Number(e.target.value) || 50)) } })} /> ft</label>
             </div>
           )}
         </div>

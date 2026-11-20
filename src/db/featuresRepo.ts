@@ -40,6 +40,29 @@ export async function addFeatures(layerId: string, inputs: NewFeature[]): Promis
   return inputs.length;
 }
 
+export async function addFeature(layerId: string, input: NewFeature): Promise<VectorFeature> {
+  await assertItemsEditable(layerId);
+  const t = nowIso();
+  const f: VectorFeature = { id: newId(), layerId, name: input.name, notes: input.notes ?? '', geometry: input.geometry, style: input.style ?? {},
+    source: input.source, extra: input.extra, createdAt: t, updatedAt: t };
+  await db.features.add(f);
+  await afterWrite();
+  return f;
+}
+
+/** Replaces a feature's geometry (and optionally its source info) atomically. Used by the track recorder. */
+export async function updateFeatureGeometry(id: string, geometry: LineOrPolygon, source?: VectorFeature['source'], patch: FeaturePatch = {}): Promise<VectorFeature> {
+  const next = await db.transaction('rw', db.features, db.layers, async () => {
+    const f = await getFeature(id);
+    await assertItemsEditable(f.layerId);
+    const n = { ...f, ...patch, geometry, source: source ?? f.source, updatedAt: nowIso() };
+    await db.features.put(n);
+    return n;
+  });
+  await afterWrite();
+  return next;
+}
+
 export type FeaturePatch = Partial<Pick<VectorFeature, 'name' | 'notes' | 'style' | 'extra'>>;
 
 const rw = <T,>(fn: () => Promise<T>): Promise<T> => db.transaction('rw', db.features, db.layers, fn);

@@ -66,6 +66,10 @@ export type LineOrPolygon =
   | GeoJSON.LineString | GeoJSON.MultiLineString
   | GeoJSON.Polygon | GeoJSON.MultiPolygon;
 
+export type FeatureSource =
+  | { kind: 'import'; fileName: string; importedAt: string; datumShiftApplied: boolean }
+  | { kind: 'track'; startedAt: string; endedAt?: string; distanceM: number; durationS: number };
+
 export interface VectorFeature {
   id: string;
   layerId: string;
@@ -73,7 +77,7 @@ export interface VectorFeature {
   notes: string;
   geometry: LineOrPolygon;
   style: StyleOverride;
-  source: { kind: 'import'; fileName: string; importedAt: string; datumShiftApplied: boolean };
+  source: FeatureSource;
   extra?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
@@ -104,7 +108,8 @@ export interface Settings {
   activeLayerId: string | null;
   lastView: { lon: number; lat: number; zoom: number; bearing: number };
   gps: { averageSeconds: 5 | 10 | 30 | 60; maxAcceptAccuracyM: number; timeoutS: number };
-  units: 'metric' | 'imperial';
+  units: 'metric' | 'imperial'; // unused: distances are always feet
+  activeTrackId?: string | null; // a track that was recording when the app last closed
   lastBackupAt: string | null;
   changesSinceBackup: number;
   bundledSeeded?: boolean; // legacy flag (= bundledVersion 1)

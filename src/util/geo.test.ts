@@ -45,8 +45,9 @@ describe('geo measures', () => {
   });
   it('featureMeasure and formatDistance', () => {
     expect(featureMeasure({ type: 'LineString', coordinates: [[0, 0], [0, 1]] }).lengthM).toBeGreaterThan(111000);
-    expect(formatDistance(1500, 'metric')).toBe('1.50 km');
-    expect(formatDistance(3, 'imperial')).toBe('9.8 ft');
+    expect(formatDistance(1500)).toBe('4,921 ft');
+    expect(formatDistance(3)).toBe('9.8 ft');
+    expect(formatDistance(100)).toBe('328 ft');
   });
 });
 
@@ -58,4 +59,21 @@ describe('circlePolygon', () => {
     expect(ring[0]).toEqual(ring[ring.length - 1]);
     for (const v of ring) expect(metersBetween([-77.48, 42.4], [v[0], v[1]])).toBeGreaterThan(24.5), expect(metersBetween([-77.48, 42.4], [v[0], v[1]])).toBeLessThan(25.5);
   });
+});
+
+import { bearingDeg, cardinal, toFeet, toMeters } from './geo';
+describe('bearing and feet', () => {
+  it('bearings: N, E, S, W and a diagonal', () => {
+    expect(bearingDeg([0, 0], [0, 1])).toBeCloseTo(0, 3);
+    expect(bearingDeg([0, 0], [1, 0])).toBeCloseTo(90, 3);
+    expect(bearingDeg([0, 0], [0, -1])).toBeCloseTo(180, 3);
+    expect(bearingDeg([0, 0], [-1, 0])).toBeCloseTo(270, 3);
+    expect(bearingDeg([-77.48, 42.4], [-77.479, 42.401])).toBeGreaterThan(30);
+    expect(bearingDeg([-77.48, 42.4], [-77.479, 42.401])).toBeLessThan(50);
+  });
+  it('cardinal names and wraparound', () => {
+    expect(cardinal(0)).toBe('N'); expect(cardinal(359)).toBe('N'); expect(cardinal(45)).toBe('NE'); expect(cardinal(200)).toBe('SSW');
+    expect(cardinal(-90)).toBe('W');
+  });
+  it('feet conversions', () => { expect(toFeet(100)).toBeCloseTo(328.084, 2); expect(toMeters(toFeet(7))).toBeCloseTo(7, 6); });
 });

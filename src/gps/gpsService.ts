@@ -3,7 +3,11 @@ import { getSettings } from '../db/settingsRepo';
 import type { Sample } from './averaging';
 
 export type GpsStatus = 'off' | 'acquiring' | 'ok' | 'denied' | 'unavailable' | 'timeout';
-export interface Fix { lon: number; lat: number; accuracyM: number; altitudeM: number | null; altitudeAccuracyM: number | null; time: number }
+export interface Fix {
+  lon: number; lat: number; accuracyM: number; altitudeM: number | null; altitudeAccuracyM: number | null; time: number;
+  headingDeg: number | null; // GPS course over ground, true north (only meaningful while moving)
+  speedMps: number | null;
+}
 
 export const useGps = create<{ status: GpsStatus; last: Fix | null }>(() => ({ status: 'off', last: null }));
 
@@ -15,6 +19,8 @@ function onPos(p: GeolocationPosition) {
   const fix: Fix = {
     lon: p.coords.longitude, lat: p.coords.latitude, accuracyM: p.coords.accuracy,
     altitudeM: p.coords.altitude, altitudeAccuracyM: p.coords.altitudeAccuracy, time: p.timestamp || Date.now(),
+    headingDeg: p.coords.heading != null && Number.isFinite(p.coords.heading) ? p.coords.heading : null,
+    speedMps: p.coords.speed != null && Number.isFinite(p.coords.speed) ? p.coords.speed : null,
   };
   useGps.setState({ status: 'ok', last: fix });
   listeners.forEach((l) => l(fix));
@@ -46,6 +52,12 @@ export function stopWatch(): void {
     watchId = undefined;
     useGps.setState({ status: 'off' });
   }
+}
+
+/** Subscribe to every new fix (needs an active watch). Returns the unsubscribe function. */
+export function onFix(cb: (f: Fix) => void): () => void {
+  listeners.add(cb);
+  return () => { listeners.delete(cb); };
 }
 
 /** Latest fix if fresher than maxAgeMs, otherwise waits for the next one. Requires an active watch. */

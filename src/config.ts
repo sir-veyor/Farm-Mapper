@@ -28,4 +28,10 @@ export const DEFAULT_VIEW = { lon: -77.481, lat: 42.399, zoom: 14, bearing: 0 };
  * the parcel (-77.48, 42.40). WGS84 position minus NAD83(2011) position.
  * For another region recompute with pyproj (EPSG:6318 -> EPSG:9755).
  */
+/**
+ * Magnetic declination at the parcel (degrees, negative = west of true north): WMM at 42.40 N, 77.48 W is -11.01 deg in
+ * late 2026 and moves about 0.03 deg/year. Phone compasses report MAGNETIC north; true heading = magnetic + declination.
+ */
+export const MAGNETIC_DECLINATION_DEG = -11.0;
+
 export const NAD83_TO_WGS84_SHIFT = { dEastM: -0.74, dNorthM: 1.078 };

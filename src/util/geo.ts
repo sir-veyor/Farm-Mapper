@@ -98,15 +98,29 @@ export function featureMeasure(g: GeoJSON.Geometry): { lengthM?: number; areaM2?
   return {};
 }
 
-export function formatDistance(m: number, units: 'metric' | 'imperial'): string {
-  if (units === 'imperial') {
-    const ft = m * 3.28084;
-    return ft >= 1000 ? `${(ft / 5280).toFixed(2)} mi` : `${ft.toFixed(ft < 10 ? 1 : 0)} ft`;
-  }
-  return m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${m.toFixed(m < 10 ? 1 : 0)} m`;
+export const M_TO_FT = 3.28084;
+export const toFeet = (m: number): number => m * M_TO_FT;
+export const toMeters = (ft: number): number => ft / M_TO_FT;
+
+/** The app always shows feet: "9.8 ft", "412 ft", "5,280 ft". (The second argument is ignored; kept for old call sites.) */
+export function formatDistance(m: number, _units?: unknown): string {
+  const ft = toFeet(m);
+  return `${ft < 10 ? ft.toFixed(1) : Math.round(ft).toLocaleString('en-US')} ft`;
 }
 
-export const formatAcres = (m2: number): string => `${(m2 / 4046.8564224).toFixed(2)} ac / ${(m2 / 10000).toFixed(2)} ha`;
+export const formatAcres = (m2: number): string => `${(m2 / 4046.8564224).toFixed(2)} acres`;
+
+/** Initial compass bearing from a to b, degrees clockwise from true north, 0 to 360. */
+export function bearingDeg(a: readonly [number, number], b: readonly [number, number]): number {
+  const rad = Math.PI / 180;
+  const dLon = (b[0] - a[0]) * rad;
+  const y = Math.sin(dLon) * Math.cos(b[1] * rad);
+  const x = Math.cos(a[1] * rad) * Math.sin(b[1] * rad) - Math.sin(a[1] * rad) * Math.cos(b[1] * rad) * Math.cos(dLon);
+  return (Math.atan2(y, x) / rad + 360) % 360;
+}
+
+const WINDS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+export const cardinal = (deg: number): string => WINDS[Math.round((((deg % 360) + 360) % 360) / 22.5) % 16];
 
 /** Closed ring approximating a circle of `radiusM` metres around a point. */
 export function circlePolygon(lon: number, lat: number, radiusM: number, steps = 64): GeoJSON.Polygon {

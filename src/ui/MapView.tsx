@@ -6,6 +6,8 @@ import { startGpsMarker } from '../map/gpsMarker';
 import { installIconLoader } from '../map/iconImages';
 import { startInteraction } from '../map/interaction';
 import { startLayerSync } from '../map/layerSync';
+import { startMeasureLayer } from '../map/measureLayer';
+import { startNavLayer } from '../map/navLayer';
 import { setMap } from '../map/mapHandle';
 import { createMap, glyphsAvailable } from '../map/mapInit';
 import { startSelectionLayer } from '../map/selectionLayer';
@@ -29,7 +31,7 @@ export function MapView({ onReady }: { onReady?: (map: MlMap) => void }) {
       const labels = await glyphsAvailable();
       if (cancelled) return;
       // Overlays first so their map layers exist before vector layers are stacked beneath them.
-      stops.push(startSelectionLayer(map), startGpsMarker(map), startLayerSync(map, { labels }), startInteraction(map));
+      stops.push(startSelectionLayer(map), startGpsMarker(map), startNavLayer(map), startMeasureLayer(map, { labels }), startLayerSync(map, { labels }), startInteraction(map));
       map.on('moveend', () => {
         const c = map!.getCenter();
         void patchSettings({ lastView: { lon: c.lng, lat: c.lat, zoom: map!.getZoom(), bearing: map!.getBearing() } });

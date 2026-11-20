@@ -34,6 +34,6 @@ export function createMap(container: HTMLElement, view: Settings['lastView']): M
     dragRotate: false,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-  map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
+  map.addControl(new maplibregl.ScaleControl({ unit: 'imperial' }), 'bottom-left');
   return map;
 }
