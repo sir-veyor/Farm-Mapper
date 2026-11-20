@@ -4,7 +4,7 @@ import { listLayers } from '../db/layersRepo';
 import { closeReader } from '../raster/mbtilesProtocol';
 import { on } from '../util/events';
 import { normalizeBounds, padBounds, unionBounds, type Bounds } from '../util/geo';
-import { isVectorMapLayer, rasterLayerId, rasterSourceKey } from './layerIds';
+import { firstAboveRasters, rasterLayerId, rasterSourceKey } from './layerIds';
 import { reconcileVector, type VectorSyncState } from './vectorSync';
 
 const MAX_BOUNDS_PAD_M = 3000;
@@ -66,9 +66,9 @@ export function startLayerSync(map: MlMap, opts: { labels: boolean } = { labels:
       }
     }
 
-    // Stacking: rasters ascending by order, all below any vector layer.
-    const firstVector = map.getStyle().layers.find((x) => isVectorMapLayer(x.id))?.id;
-    for (const l of rasters) map.moveLayer(rasterLayerId(l.id), firstVector);
+    // Stacking: rasters ascending by order, all below every vector layer and every overlay.
+    const above = firstAboveRasters(map.getStyle().layers.map((x) => x.id));
+    for (const l of rasters) map.moveLayer(rasterLayerId(l.id), above);
 
     // Pan clamp: union of non-frozen raster bounds + 3 km; none when there is no raster.
     const all = unionBounds(rasters.map((l) => srcById.get(l.rasterSourceId!)!.bounds as Bounds));

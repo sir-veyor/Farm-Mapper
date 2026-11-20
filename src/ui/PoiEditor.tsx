@@ -45,6 +45,8 @@ export function PoiEditor({ id }: { id: string }) {
 
   return (
     <Sheet title={<span>{readOnly && '🔒 '}Pin</span>} onClose={close}>
+      <button style={{ ...btn, width: '100%', minHeight: 46, fontSize: 17, fontWeight: 600, background: '#2f5d3a', color: '#fff', borderColor: '#2f5d3a', marginBottom: 8 }}
+        data-testid="navigate-btn" onClick={() => { startNavigation({ lon: poi.lon, lat: poi.lat, name: poi.name }); select(null); }}>🧭 Navigate to this pin</button>
       {readOnly && <div style={{ background: '#fff3cd', padding: 6, borderRadius: 8, marginBottom: 6 }}>Layer "{layer.name}" is locked: read-only. Unlock it in Layers to edit.</div>}
       <span style={label}>Name</span>
       <input style={input} value={f.name} disabled={readOnly} aria-label="Name" onChange={(e) => f.setName(e.target.value)} onBlur={f.flush} />
@@ -78,8 +80,6 @@ export function PoiEditor({ id }: { id: string }) {
       </select>
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-        <button style={{ ...btn, background: '#2f5d3a', color: '#fff', borderColor: '#2f5d3a' }} data-testid="navigate-btn"
-          onClick={() => { startNavigation({ lon: poi.lon, lat: poi.lat, name: poi.name }); select(null); }}>🧭 Navigate</button>
         <button style={btn} disabled={readOnly} onClick={() => { setTool({ type: 'movePoi', id }); toast('Tap the new location on the map.', 'info'); }}>Move</button>
         <button style={btn} disabled={readOnly || !Object.keys(poi.style).length} onClick={() => void act(clearPoiStyle(id))}>Reset to layer style</button>
         <button style={btnDanger} disabled={readOnly} onClick={() => void remove()}>Delete</button>
