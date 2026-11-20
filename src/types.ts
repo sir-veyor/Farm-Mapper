@@ -106,5 +106,6 @@ export interface Settings {
   units: 'metric' | 'imperial';
   lastBackupAt: string | null;
   changesSinceBackup: number;
-  bundledSeeded?: boolean; // the bundled DEM/imagery were imported on first launch
+  bundledSeeded?: boolean; // legacy flag (= bundledVersion 1)
+  bundledVersion?: number; // which bundled map-data set this device has been given
 }
