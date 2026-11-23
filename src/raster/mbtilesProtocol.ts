@@ -1,4 +1,4 @@
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import { getRasterBlob, getRasterSource } from '../db/rasterRepo';
 import { transparentPng } from './emptyTile';
 import { MbtilesReader } from './mbtilesReader';

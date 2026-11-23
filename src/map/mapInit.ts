@@ -1,4 +1,6 @@
-import maplibregl, { type Map as MlMap, type StyleSpecification } from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
+import type { Map as MlMap, StyleSpecification } from 'maplibre-gl';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'; // MapLibre 6 loads its background worker from a file
 import { MAP_MAX_ZOOM } from '../config';
 import type { Settings } from '../types';
 
@@ -23,6 +25,7 @@ export async function glyphsAvailable(): Promise<boolean> {
 }
 
 export function createMap(container: HTMLElement, view: Settings['lastView']): MlMap {
+  maplibregl.setWorkerUrl(workerUrl);
   const map = new maplibregl.Map({
     container,
     style: offlineStyle(),
