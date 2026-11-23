@@ -1,5 +1,4 @@
 import { AboutPanel } from './AboutPanel';
-import { BackupBanner } from './BackupBanner';
 import { BackupDialog } from './BackupDialog';
 import { ConfirmDialog } from './ConfirmDialog';
 import { EmptyState } from './EmptyState';
@@ -19,7 +18,6 @@ export function App() {
     <div style={{ position: 'fixed', inset: 0 }}>
       <MapView />
       <AboutPanel />
-      <BackupBanner />
       <EmptyState />
       <SheetHost />
       <ToolBanner />
